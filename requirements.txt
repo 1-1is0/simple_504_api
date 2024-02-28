@@ -1,0 +1,12 @@
+dj-rest-auth==5.0.2
+Django==5.0.2
+django-cors-headers==4.3.1
+django-filter==23.5
+django-minio-storage==0.5.7
+djangorestframework==3.14.0
+Markdown==3.5.2
+pillow==10.2.0
+psycopg2==2.9.9
+attrs==23.2.0
+flatdict==4.0.1
+python-dotenv==1.0.1

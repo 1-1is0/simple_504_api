@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    pull_policy: if_not_present
+    hostname: postgres
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    ports:
+      - ${POSTGRES_PORT}:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB}
+    restart: unless-stopped
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # logging:
+    #   driver: gelf
+    #   options:
+    #     gelf-address: "${GELF_ADDRESS}" # Logstash UDP input port
+    #     tag: "postgres"
+
+  pgadmin:
+    image: dpage/pgadmin4:7
+    pull_policy: if_not_present
+    hostname: pgadmin
+    user: root # weird permission error
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD-:}
+      PGADMIN_LISTEN_PORT: ${PGADMIN_LISTEN_PORT}
+    ports:
+      - ${PGADMIN_LISTEN_PORT}:${PGADMIN_LISTEN_PORT}
+    volumes:
+      - ./volumes/pgadmin:/var/lib/pgadmin
+    # logging:
+    #   driver: gelf
+    #   options:
+    #     gelf-address: "${GELF_ADDRESS}" # Logstash UDP input port
+    #     tag: "pgadmin"
+
+  minio:
+    image: minio/minio:RELEASE.2023-08-04T17-40-21Z # maybe switch to bitnami minio image for better update support
+    pull_policy: if_not_present
+    command: server --console-address ":9001" /data
+    hostname: minio
+    ports:
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    volumes:
+      - ./volumes/minio:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 20s
+    # logging:
+    #   driver: gelf
+    #   options:
+    #     gelf-address: "${GELF_ADDRESS}" # Logstash UDP input port
+    #     tag: "minio"
+
+  api:
+    pull_policy: if_not_present
+    build:
+      context: .
+      network: host
+      dockerfile: ./Dockerfile
+      args:
+        NAME: panel_api
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres
+      - minio
+    # logging:
+    #   driver: gelf
+    #   options:
+    #     gelf-address: "${GELF_ADDRESS}" # Logstash UDP input port
+    #     tag: "panel_api"
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.0.0/24
