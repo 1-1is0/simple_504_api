@@ -3,10 +3,7 @@ from django.urls import reverse
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
 
-
-# class UserStudyWordModels()
 class UserStudyWordModel(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE

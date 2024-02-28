@@ -175,7 +175,7 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.OrderingFilter",
     ],
-    "DEFAULT_PAGINATION_CLASS": "panel_api.standard_pagination.StandardResultsSetPagination",
+    "DEFAULT_PAGINATION_CLASS": "api.standard_pagination.StandardResultsSetPagination",
 }
 
 
