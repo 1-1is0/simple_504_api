@@ -22,8 +22,6 @@ done
 
 sleep 1
 
-echo "$@"
-exec "$@"
 
 echo "PostgreSQL started"
 # fi
@@ -40,6 +38,9 @@ if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] ; 
     python manage.py createsuperuser --no-input --email $DJANGO_SUPERUSER_EMAIL --username $DJANGO_SUPERUSER_USERNAME
 fi
 
-python manage.py runserver 0.0.0.0:8000
+# python manage.py runserver 0.0.0.0:8000
 # gunicorn api.wsgi --user www-data --bind 0.0.0.0:8010 --workers 3 & nginx -g "daemon off;"
 # gunicorn -b :5000 --workers 5 api.wsgi:application
+
+echo "$@"
+exec "$@"
