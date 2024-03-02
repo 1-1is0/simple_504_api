@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "dj_rest_auth.registration",
     "minio_storage",
     "corsheaders",
+    "drf_spectacular",
     "my_user",
     "lesson",
 ]
@@ -180,7 +181,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         # 'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
     ),
-    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.OrderingFilter",
@@ -188,6 +189,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "api.standard_pagination.StandardResultsSetPagination",
 }
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Simple 504 API",
+    "DESCRIPTION": "Simple 504 API Swagger UI",
+    "VERSION": "0.0.1",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # OTHER SETTINGS
+}
 
 MEDIA_URL = "/images/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "static/images")
