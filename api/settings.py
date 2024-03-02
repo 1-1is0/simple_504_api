@@ -106,6 +106,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CSRF_TRUSTED_ORIGINS = [
     "https://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://*.simple504api.darkube.app",
 ]
 
 DATABASES = {
