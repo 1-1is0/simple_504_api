@@ -18,3 +18,8 @@ class WordSerializer(serializers.ModelSerializer):
     class Meta:
         model = WordModel
         fields = "__all__"
+
+
+class WordStudySerializer(serializers.Serializer):
+    word = WordSerializer()
+    other_words = WordSerializer(many=True)
