@@ -189,6 +189,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "api.standard_pagination.StandardResultsSetPagination",
 }
 
+REST_AUTH = {
+    "TOKEN_SERIALIZER": "api.serializers.CustomTokenSerializer",
+}
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Simple 504 API",
     "DESCRIPTION": "Simple 504 API Swagger UI",
