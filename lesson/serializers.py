@@ -1,14 +1,31 @@
 from rest_framework import serializers
-from lesson.models import CourseModel, UnitModel, WordModel
+from lesson.models import LessonModel, UnitModel, WordModel
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class LessonSerializer(serializers.ModelSerializer):
+    units_count = serializers.SerializerMethodField()
+    words_count = serializers.SerializerMethodField()
+
+    def get_units_count(self, obj: LessonModel):
+        count = UnitModel.objects.filter(lesson=obj).count()
+        return count
+
+    def get_words_count(self, obj: LessonModel):
+        count = WordModel.objects.filter(unit__lesson=obj).count()
+        return count
+
     class Meta:
-        model = CourseModel
+        model = LessonModel
         fields = "__all__"
 
 
 class UnitSerializer(serializers.ModelSerializer):
+    words_count = serializers.SerializerMethodField()
+
+    def get_words_count(self, obj: UnitModel):
+        count = WordModel.objects.filter(unit=obj).count()
+        return count
+
     class Meta:
         model = UnitModel
         fields = "__all__"

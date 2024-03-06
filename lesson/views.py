@@ -2,9 +2,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
-from lesson.models import CourseModel, UnitModel, WordModel
+from lesson.models import LessonModel, UnitModel, WordModel
 from lesson.serializers import (
-    CourseSerializer,
+    LessonSerializer,
     UnitSerializer,
     WordSerializer,
     WordStudySerializer,
@@ -12,8 +12,8 @@ from lesson.serializers import (
 
 
 class LessonViewSet(viewsets.ModelViewSet):
-    queryset = CourseModel.objects.all()
-    serializer_class = CourseSerializer
+    queryset = LessonModel.objects.all()
+    serializer_class = LessonSerializer
 
 
 class UnitViewSet(viewsets.ModelViewSet):
