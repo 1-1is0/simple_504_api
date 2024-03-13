@@ -15,6 +15,17 @@ class LessonViewSet(viewsets.ModelViewSet):
     queryset = LessonModel.objects.all()
     serializer_class = LessonSerializer
 
+    @extend_schema(
+        description="Get all units in a lesson",
+        responses={200: UnitSerializer(many=True)},
+    )
+    @action(detail=True, methods=["get"])
+    def units(self, request, pk, *args, **kwargs):
+        lesson = self.get_object()
+        units = UnitModel.objects.filter(lesson=lesson)
+        serializer = UnitSerializer(units, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class UnitViewSet(viewsets.ModelViewSet):
     queryset = UnitModel.objects.all()
