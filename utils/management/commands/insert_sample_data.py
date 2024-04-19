@@ -18,6 +18,9 @@ class Command(BaseCommand):
         words_csv_file = Path(settings.BASE_DIR, words_csv_file)
         print(words_csv_file)
         course, created = CourseModel.objects.get_or_create(name='504 Absolutely Essential Words') 
+        for i in range(1, 39):
+            unit, created = UnitModel.objects.get_or_create(pk=i, course=course)
+            
         with open(words_csv_file, 'r') as file:
             # reader = csv.reader(file)
             reader = csv.DictReader(file)
