@@ -3,15 +3,15 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 
-class LessonModel(models.Model):
+class CourseModel(models.Model):
     name = models.CharField(_("course name"), max_length=128)
 
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
-        verbose_name = _("LessonModel")
-        verbose_name_plural = _("LessonModels")
+        verbose_name = _("CourseModel")
+        verbose_name_plural = _("CourseModels")
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -24,7 +24,7 @@ class LessonModel(models.Model):
 class UnitModel(models.Model):
     name = models.CharField(_("unit name"), max_length=50)
     lesson = models.ForeignKey(
-        "lesson.LessonModel", verbose_name=_("Course"), on_delete=models.CASCADE
+        "lesson.CourseModel", verbose_name=_("Course"), on_delete=models.CASCADE
     )
     # TODO image for unit
 

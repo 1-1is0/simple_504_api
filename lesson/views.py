@@ -2,21 +2,21 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
-from lesson.models import LessonModel, UnitModel, WordModel
+from lesson.models import CourseModel, UnitModel, WordModel
 from lesson.serializers import (
-    LessonSerializer,
+    CourseSerializer,
     UnitSerializer,
     WordSerializer,
     WordStudySerializer,
 )
 
 
-class LessonViewSet(viewsets.ModelViewSet):
-    queryset = LessonModel.objects.all()
-    serializer_class = LessonSerializer
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = CourseModel.objects.all()
+    serializer_class = CourseSerializer
 
     @extend_schema(
-        description="Get all units in a lesson",
+        description="Get all units in a course",
         responses={200: UnitSerializer(many=True)},
     )
     @action(detail=True, methods=["get"])
