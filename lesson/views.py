@@ -54,12 +54,10 @@ class UnitViewSet(viewsets.ModelViewSet):
             )
     def start_learning(self, request, pk, learn_id, *args, **kwargs):
         learn_id = int(learn_id)
-        print("pk", pk)
-        print("learn_id", learn_id)
         unit = self.get_object()
         all_course_units = UnitModel.objects.filter(course=unit.course)
-        currect_word = WordModel.objects.filter(unit=unit).order_by("?").first()
-        words = WordModel.objects.filter(unit__in=all_course_units).exclude(pk=currect_word.pk).order_by("?")[:3]
+        words = WordModel.objects.filter(unit=unit).order_by("?")[:4]
+        currect_word = words[0]
         words_serializer = WordSerializer(words, many=True)
         currect_words_serializer = WordSerializer(currect_word, many=False)
 
