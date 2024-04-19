@@ -1,4 +1,7 @@
 import csv
+import io
+from matplotlib import pyplot as plt
+from django.core.files.base import ContentFile
 from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -19,6 +22,9 @@ class Command(BaseCommand):
         print(words_csv_file)
         course, created = CourseModel.objects.get_or_create(name='504 Absolutely Essential Words') 
         for i in range(1, 39):
+            
+
+            figure = io.BytesIO()
             unit, created = UnitModel.objects.get_or_create(pk=i, course=course, name=f"unit {i}")
             
         with open(words_csv_file, 'r') as file:
