@@ -19,7 +19,7 @@ class Command(BaseCommand):
         print(words_csv_file)
         course, created = CourseModel.objects.get_or_create(name='504 Absolutely Essential Words') 
         for i in range(1, 39):
-            unit, created = UnitModel.objects.get_or_create(pk=i, course=course, name=f"unit {unit_id}")
+            unit, created = UnitModel.objects.get_or_create(pk=i, course=course, name=f"unit {i}")
             
         with open(words_csv_file, 'r') as file:
             # reader = csv.reader(file)
