@@ -6,7 +6,7 @@ app_name = "lesson"
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r"Course", CourseViewSet, basename="Course3ViewSet")
+router.register(r"course", CourseViewSet, basename="Course3ViewSet")
 router.register(r"unit", UnitViewSet, basename="UnitViewSet")
 router.register(r"word", WordViewSet, basename="WordViewSet")
 
