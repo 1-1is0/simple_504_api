@@ -11,6 +11,8 @@ from lesson.serializers import (
 )
 
 
+# todo all views realy only
+
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = CourseModel.objects.all()
     serializer_class = CourseSerializer
@@ -21,8 +23,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["get"])
     def units(self, request, pk, *args, **kwargs):
-        lesson = self.get_object()
-        units = UnitModel.objects.filter(lesson=lesson)
+        course = self.get_object()
+        units = UnitModel.objects.filter(course=course)
         serializer = UnitSerializer(units, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

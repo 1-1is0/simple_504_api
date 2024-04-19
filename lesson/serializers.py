@@ -7,11 +7,11 @@ class CourseSerializer(serializers.ModelSerializer):
     words_count = serializers.SerializerMethodField()
 
     def get_units_count(self, obj: CourseModel):
-        count = UnitModel.objects.filter(lesson=obj).count()
+        count = UnitModel.objects.filter(course=obj).count()
         return count
 
     def get_words_count(self, obj: CourseModel):
-        count = WordModel.objects.filter(unit__lesson=obj).count()
+        count = WordModel.objects.filter(unit__course=obj).count()
         return count
 
     class Meta:

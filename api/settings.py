@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "custom_auth",
     "my_user",
     "lesson",
+    "utils",
 ]
 
 SITE_ID = 1
