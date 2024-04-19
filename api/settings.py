@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "minio_storage",
     "corsheaders",
     "drf_spectacular",
+    "custom_auth",
     "my_user",
     "lesson",
 ]
@@ -191,6 +192,7 @@ REST_FRAMEWORK = {
 
 REST_AUTH = {
     "TOKEN_SERIALIZER": "api.serializers.CustomTokenSerializer",
+    "LOGIN_SERIALIZER": "custom_auth.serializers.CustomLoginSerializer",
 }
 
 SPECTACULAR_SETTINGS = {

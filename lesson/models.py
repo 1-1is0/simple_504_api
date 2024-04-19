@@ -26,6 +26,7 @@ class UnitModel(models.Model):
     lesson = models.ForeignKey(
         "lesson.LessonModel", verbose_name=_("Course"), on_delete=models.CASCADE
     )
+    # TODO image for unit
 
     audio = models.FileField(_("audio"), upload_to="unit_audios/", blank=True)
     description = models.TextField(_("description"), blank=True)
