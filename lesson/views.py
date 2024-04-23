@@ -84,7 +84,8 @@ class UnitViewSet(viewsets.ModelViewSet):
             # next_learn_url = f"/lesson/unit/{pk}/start_learning/{learn_id}"
             # next_learn_url = reverse(viewname="unitviewset-list", args=[pk, learn_id+1], request=request)
             next_learn_url = reverse("lesson:UnitViewSet-start-learning", kwargs={"pk": pk, "learn_id": learn_id+1}, request=request)
-            data["next"] = next_learn_url
+
+            data["next"] = str(next_learn_url).replace("http", "https")
 
         return Response(data, status=status.HTTP_200_OK)
 
