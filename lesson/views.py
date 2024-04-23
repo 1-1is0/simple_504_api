@@ -56,12 +56,16 @@ class UnitViewSet(viewsets.ModelViewSet):
         learn_id = int(learn_id)
         unit = self.get_object()
         all_course_units = UnitModel.objects.filter(course=unit.course)
-        words = WordModel.objects.filter(unit=unit).order_by("?")[:4]
-        currect_word = words[0]
+        words = list(WordModel.objects.filter(unit=unit).order_by("?")[0:4])
+        # words = WordModel.objects.filter(unit=unit).order_by("?")[0:4]
+        correct_word = words[0]
         words_serializer = WordSerializer(words, many=True)
-        currect_words_serializer = WordSerializer(currect_word, many=False)
+        correct_words_serializer = WordSerializer(correct_word, many=False)
 
-        question = f"what is {currect_word.definition}"
+        print('words', words)
+        print('correct words', correct_word)
+
+        question = f"what is {correct_word.definition}"
         
         metadata = {
             "max": 15,
@@ -74,7 +78,7 @@ class UnitViewSet(viewsets.ModelViewSet):
         data = {
             "question": question,
             "words": words_serializer.data,
-            "answer": currect_words_serializer.data,
+            "answer": correct_words_serializer.data,
             "metadata": metadata,
             "next": None,
         }
