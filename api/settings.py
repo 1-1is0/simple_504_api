@@ -107,6 +107,7 @@ WSGI_APPLICATION = "api.wsgi.application"
 #     "https://simple504api.darkube.app",
 # ]
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://localhost:3000",
