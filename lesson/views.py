@@ -71,7 +71,7 @@ class UnitViewSet(viewsets.ModelViewSet):
             "max": 15,
             "correct": random.randint(0, 10),
             "incorrect": random.randint(0, 3),
-            "currenct": learn_id,
+            "current": learn_id,
         }
 
 
