@@ -76,6 +76,7 @@ class UnitViewSet(viewsets.ModelViewSet):
 
         if request.method == "GET":
             all_course_units = UnitModel.objects.filter(course=unit.course)
+
             words = list(WordModel.objects.filter(unit=unit)[0:4])
             # words = WordModel.objects.filter(unit=unit).order_by("?")[0:4]
             correct_word = words[0]
