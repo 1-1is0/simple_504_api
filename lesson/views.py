@@ -88,19 +88,22 @@ class UnitViewSet(viewsets.ModelViewSet):
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
             )
 
+            data = {
+                "question": "",
+                "words": [correct_words_serializer.data],
+                "answer": correct_words_serializer.data,
+                "next": None,
+            }
+
             print("word study study type", user_word_study.study_type)
             if user_word_study.study_type == UserStudyWordModel.INTRO:
-                data = {
-                    "word": correct_words_serializer.data,
-                }
+                data["words"] = [correct_words_serializer.data]
+                data["answer"] = correct_words_serializer.data
             elif user_word_study.study_type == UserStudyWordModel.CARD:
                 question = f"what is {correct_word.definition}"
-                data = {
-                    "question": question,
-                    "words": words_serializer.data,
-                    "answer": correct_words_serializer.data,
-                    "next": None,
-                }
+                data["question"] = question
+                data["words"] = words_serializer.data
+                data["answer"] = correct_words_serializer.data
             else:
                 raise NotAcceptable("Invalid study type")
 
@@ -116,12 +119,16 @@ class UnitViewSet(viewsets.ModelViewSet):
                     request=request,
                 )
 
-                data["next"] = str(next_learn_url).replace("http", "https")
+                # TODO fix for server
+                # data["next"] = str(next_learn_url).replace("http", "https")
+                data["next"] = str(next_learn_url)
             else:
                 data["next"] = None
 
             user_study_session.save()
             # TODO add question types
+            print("#####")
+            print("response data", data)
             return Response(data, status=status.HTTP_200_OK)
         elif request.method == "POST":
             serializer = UserStudyWordPostSerializer(data=request.data)

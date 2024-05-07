@@ -42,6 +42,12 @@ class Config:
         def SECRET_KEY(cls):
             return os.getenv("SECRET_KEY")
 
+        @classproperty
+        def IS_LOCAL(cls):
+            is_local = str(os.getenv("IS_LOCAL", "false")).lower()
+            if is_local == "true":
+                return True
+
     class Postgres:
         @classproperty
         def host(cls):

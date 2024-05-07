@@ -42,5 +42,5 @@ fi
 # gunicorn api.wsgi --user www-data --bind 0.0.0.0:8010 --workers 3 & nginx -g "daemon off;"
 # gunicorn -b :5000 --workers 5 api.wsgi:application
 
-echo "$@"
+echo running "$@"
 exec "$@"
