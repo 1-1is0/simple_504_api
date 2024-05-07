@@ -3,7 +3,7 @@
 
 # if [ "$DATABASE" = "postgres" ]
 # then
-i = 0
+i=0
 echo "Waiting for Postgres... ${POSTGRES_HOST} ${POSTGRES_PORT}"
 while ! nc -z ${POSTGRES_HOST} ${POSTGRES_PORT}; do
   echo "P${i}-"
