@@ -1,9 +1,17 @@
-from rest_framework import viewsets, status
 import random
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotAcceptable, MethodNotAllowed
 from drf_spectacular.utils import extend_schema
+from my_user.models import UserStudyWordModel, UserStudySessionModel
+from my_user.serializers import (
+    UserStudyWordSerializer,
+    UserStudySessionSerializer,
+    UserStudyWordPostSerializer,
+)
 from lesson.models import CourseModel, UnitModel, WordModel
 from lesson.serializers import (
     CourseSerializer,
@@ -14,6 +22,7 @@ from lesson.serializers import (
 
 
 # todo all views realy only
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = CourseModel.objects.all()
@@ -46,52 +55,94 @@ class UnitViewSet(viewsets.ModelViewSet):
         serializer = WordSerializer(words, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True,
-            url_path=r"start-learning/(?P<learn_id>[^/.]+)",
-            # url_path=r"start_learning/(?P<learn_id>\d+)",
-            url_name="start-learning",
-            methods=["get"],
-            )
+    @action(
+        detail=True,
+        url_path=r"start-learning/(?P<learn_id>[^/.]+)",
+        # url_path=r"start_learning/(?P<learn_id>\d+)",
+        url_name="start-learning",
+        methods=["GET", "POST"],
+    )
     def start_learning(self, request, pk, learn_id, *args, **kwargs):
+        user = request.user
         learn_id = int(learn_id)
         unit = self.get_object()
-        all_course_units = UnitModel.objects.filter(course=unit.course)
-        words = list(WordModel.objects.filter(unit=unit).order_by("?")[0:4])
-        # words = WordModel.objects.filter(unit=unit).order_by("?")[0:4]
-        correct_word = words[0]
-        words_serializer = WordSerializer(words, many=True)
-        correct_words_serializer = WordSerializer(correct_word, many=False)
 
-        print('words', words)
-        print('correct words', correct_word)
+        user_study_session, user_study_session_created = (
+            UserStudySessionModel.objects.get_or_create(user=user)
+        )
+        user_study_session_serializer = UserStudySessionSerializer(
+            user_study_session, many=False
+        )
 
-        question = f"what is {correct_word.definition}"
-        
-        metadata = {
-            "max": 15,
-            "correct": random.randint(0, 10),
-            "incorrect": random.randint(0, 3),
-            "current": learn_id,
-        }
+        if request.method == "GET":
+            all_course_units = UnitModel.objects.filter(course=unit.course)
+            words = list(WordModel.objects.filter(unit=unit)[0:4])
+            # words = WordModel.objects.filter(unit=unit).order_by("?")[0:4]
+            correct_word = words[0]
+            user_study_session.words.add(correct_word)
+            words_serializer = WordSerializer(words, many=True)
+            correct_words_serializer = WordSerializer(correct_word, many=False)
 
+            user_word_study, user_word_study_created = (
+                UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
+            )
 
-        data = {
-            "question": question,
-            "words": words_serializer.data,
-            "answer": correct_words_serializer.data,
-            "metadata": metadata,
-            "next": None,
-        }
+            print("word study study type", user_word_study.study_type)
+            if user_word_study.study_type == UserStudyWordModel.INTRO:
+                data = {
+                    "word": correct_words_serializer.data,
+                }
+            elif user_word_study.study_type == UserStudyWordModel.CARD:
+                question = f"what is {correct_word.definition}"
+                data = {
+                    "question": question,
+                    "words": words_serializer.data,
+                    "answer": correct_words_serializer.data,
+                    "next": None,
+                }
+            else:
+                raise NotAcceptable("Invalid study type")
 
-        if learn_id < 15:
-            
-            # next_learn_url = f"/lesson/unit/{pk}/start_learning/{learn_id}"
-            # next_learn_url = reverse(viewname="unitviewset-list", args=[pk, learn_id+1], request=request)
-            next_learn_url = reverse("lesson:UnitViewSet-start-learning", kwargs={"pk": pk, "learn_id": learn_id+1}, request=request)
+            data["metadata"] = user_study_session_serializer.data
 
-            data["next"] = str(next_learn_url).replace("http", "https")
+            if learn_id < user_study_session.max_session:
 
-        return Response(data, status=status.HTTP_200_OK)
+                # next_learn_url = f"/lesson/unit/{pk}/start_learning/{learn_id}"
+                # next_learn_url = reverse(viewname="unitviewset-list", args=[pk, learn_id+1], request=request)
+                next_learn_url = reverse(
+                    "lesson:UnitViewSet-start-learning",
+                    kwargs={"pk": pk, "learn_id": learn_id + 1},
+                    request=request,
+                )
+
+                data["next"] = str(next_learn_url).replace("http", "https")
+            else:
+                data["next"] = None
+
+            user_study_session.save()
+            # TODO add question types
+            return Response(data, status=status.HTTP_200_OK)
+        elif request.method == "POST":
+            serializer = UserStudyWordPostSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            word = get_object_or_404(WordModel, pk=serializer.validated_data["id"])
+            headers = self.get_success_headers(serializer.data)
+            user_study_session = get_object_or_404(
+                UserStudySessionModel, user=user, learn_id=learn_id
+            )
+            last_word = user_study_session.words.last()
+            user_study_session.learn_id += 1
+            if last_word == word:
+                user_study_session.correct += 1
+            else:
+                user_study_session.incorrect += 1
+
+            user_study_session.save()
+
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            )
+
 
 class WordViewSet(viewsets.ModelViewSet):
     queryset = WordModel.objects.all()

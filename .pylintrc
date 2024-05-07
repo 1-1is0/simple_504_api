@@ -4,6 +4,7 @@ disable=
     C0115, # missing-class-docstring
     C0116, # missing-function-docstring
 
-load-plugins=pylint_django,pylint_celery
-django-settings-module=panel_api.settings
-jobs=4
+load-plugins=pylint_django
+django-settings-module=api.settings
+jobs=8
+
