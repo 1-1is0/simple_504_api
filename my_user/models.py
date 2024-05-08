@@ -80,19 +80,19 @@ class UserStudyWordModel(models.Model):
         # Card -> intro
         if self.study_type == self.CARD:
             self.progress_step -= 1
-            if self.progress_step < 0:
+            if self.progress_step <= 0:
                 self.study_type = self.INTRO
                 self.progress_step = 0
         # listening -> card
         elif self.study_type == self.LISTENING:
             self.progress_step -= 1
-            if self.progress_step < 0:
+            if self.progress_step <= 0:
                 self.study_type = self.CARD
                 self.progress_step = self.MAX_CARD
         # writing -> listening
         elif self.study_type == self.WRITING:
             self.progress_step -= 1
-            if self.progress_step < 0:
+            if self.progress_step <= 0:
                 self.study_type = self.LISTENING
                 self.progress_step = self.MAX_LISTENING
         self.save()
@@ -122,4 +122,4 @@ class UserStudySessionModel(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.pk} user: {self.user} word: {self.word}"
+        return f"{self.pk} user: {self.user}"

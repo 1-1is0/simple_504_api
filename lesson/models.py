@@ -1,4 +1,3 @@
-
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -27,18 +26,18 @@ class UnitModel(models.Model):
     course = models.ForeignKey(
         "lesson.CourseModel", verbose_name=_("Course"), on_delete=models.CASCADE
     )
-    # TODO image for unit
-
+    image = models.ImageField(_("image"), upload_to="unit_images/", blank=True)
     audio = models.FileField(_("audio"), upload_to="unit_audios/", blank=True)
     description = models.TextField(_("description"), blank=True)
 
+    order = models.PositiveIntegerField(_("order"), default=0)
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
         verbose_name = _("UnitModel")
         verbose_name_plural = _("UnitModels")
-        ordering = ["-created_at"]
+        ordering = ["-order", "-created_at"]
 
     def __str__(self):
         return f"{self.pk} {self.name}"
