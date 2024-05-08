@@ -18,7 +18,9 @@ from lesson.serializers import (
     UnitSerializer,
     WordSerializer,
     WordStudySerializer,
+    LearningReadSerializer,
 )
+from api.config import Config
 
 
 # todo all views realy only
@@ -63,6 +65,10 @@ class UnitViewSet(viewsets.ModelViewSet):
         methods=["GET", "POST"],
     )
     def start_learning(self, request, pk, learn_id, *args, **kwargs):
+        test = request.query_params.get("test", False)
+        test = bool(test)
+        print("test", test)
+
         user = request.user
         learn_id = int(learn_id)
         unit = self.get_object()
@@ -77,12 +83,13 @@ class UnitViewSet(viewsets.ModelViewSet):
         if request.method == "GET":
             all_course_units = UnitModel.objects.filter(course=unit.course)
 
+            w = WordModel.objects.filter(unit=unit)[0:4]
             words = list(WordModel.objects.filter(unit=unit)[0:4])
             # words = WordModel.objects.filter(unit=unit).order_by("?")[0:4]
             correct_word = words[0]
             user_study_session.words.add(correct_word)
             words_serializer = WordSerializer(words, many=True)
-            correct_words_serializer = WordSerializer(correct_word, many=False)
+            correct_word_serializer = WordSerializer(correct_word, many=False)
 
             user_word_study, user_word_study_created = (
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
@@ -90,20 +97,21 @@ class UnitViewSet(viewsets.ModelViewSet):
 
             data = {
                 "question": "",
-                "words": [correct_words_serializer.data],
-                "answer": correct_words_serializer.data,
-                "next": None,
+                "words": [correct_word_serializer.data],
+                "answer": correct_word_serializer.data,
+                "next_url": "",
+                "study_type": user_word_study.study_type,
             }
 
             print("word study study type", user_word_study.study_type)
             if user_word_study.study_type == UserStudyWordModel.INTRO:
-                data["words"] = [correct_words_serializer.data]
-                data["answer"] = correct_words_serializer.data
+                data["words"] = [correct_word_serializer.data]
+                data["answer"] = correct_word_serializer.data
             elif user_word_study.study_type == UserStudyWordModel.CARD:
                 question = f"what is {correct_word.definition}"
                 data["question"] = question
                 data["words"] = words_serializer.data
-                data["answer"] = correct_words_serializer.data
+                data["answer"] = correct_word_serializer.data
             else:
                 raise NotAcceptable("Invalid study type")
 
@@ -119,17 +127,37 @@ class UnitViewSet(viewsets.ModelViewSet):
                     request=request,
                 )
 
-                # TODO fix for server
-                # data["next"] = str(next_learn_url).replace("http", "https")
-                data["next"] = str(next_learn_url)
+                # change the url to https if the api is not local
+                if Config.API.IS_LOCAL:
+                    data["next_url"] = str(next_learn_url)
+                else:
+                    data["next_url"] = str(next_learn_url).replace("http", "https")
             else:
-                data["next"] = None
+                data["next_url"] = ""
 
             user_study_session.save()
             # TODO add question types
-            print("#####")
-            print("response data", data)
-            return Response(data, status=status.HTTP_200_OK)
+
+            if test:
+                # correct_word_serializer.is_valid(raise_exception=True)
+                s_data = {
+                    "question": data["question"],
+                    # "words": w,
+                    "answer": correct_word,
+                    "next_url": data["next_url"],
+                    "study_type": data["study_type"],
+                }
+                learning_read_serializer = LearningReadSerializer(
+                    data=s_data, context={"request": request}
+                )
+                print("##### SERIALIZER")
+                learning_read_serializer.is_valid(raise_exception=True)
+                print("response data", learning_read_serializer.data)
+                return Response(
+                    learning_read_serializer.data, status=status.HTTP_200_OK
+                )
+            else:
+                return Response(data, status=status.HTTP_200_OK)
         elif request.method == "POST":
             serializer = UserStudyWordPostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -141,8 +169,10 @@ class UnitViewSet(viewsets.ModelViewSet):
             last_word = user_study_session.words.last()
             user_study_session.learn_id += 1
             if last_word == word:
+                user_word_study.next_step()
                 user_study_session.correct += 1
             else:
+                user_word_study.previous_step()
                 user_study_session.incorrect += 1
 
             user_study_session.save()

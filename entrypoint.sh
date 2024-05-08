@@ -4,7 +4,7 @@
 # if [ "$DATABASE" = "postgres" ]
 # then
 i=0
-echo "Waiting for Postgres... ${POSTGRES_HOST} ${POSTGRES_PORT}"
+echo "waiting for postgres... ${POSTGRES_HOST} ${POSTGRES_PORT}"
 while ! nc -z ${POSTGRES_HOST} ${POSTGRES_PORT}; do
   echo "P${i}-"
   let "i+=1"
@@ -23,14 +23,14 @@ done
 sleep 1
 
 
-echo "PostgreSQL started"
+echo "postgresql started"
 # fi
 
 # python manage.py flush --no-input
-echo "----- Collect static files ------ "
+echo "----- collect static files ------ "
 python manage.py collectstatic --noinput
 
-echo "-----------Apply migration--------- "
+echo "-----------apply migration--------- "
 # python manage.py makemigrations
 python manage.py migrate
 
@@ -41,6 +41,8 @@ fi
 # python manage.py runserver 0.0.0.0:8000
 # gunicorn api.wsgi --user www-data --bind 0.0.0.0:8010 --workers 3 & nginx -g "daemon off;"
 # gunicorn -b :5000 --workers 5 api.wsgi:application
+echo "-----running server-----"
+python manage.py runserver 0.0.0.0:8000
 
-echo running "$@"
-exec "$@"
+# echo running "$@"
+# exec "$@"
