@@ -1,0 +1,19 @@
+volumes/
+.python-version
+
+# production
+*build
+
+# misc
+.DS_Store
+*.pem
+*.crt
+
+# local env files
+.env
+.env.*
+.env-docker
+.env*.local
+
+# vercel
+.vercel
