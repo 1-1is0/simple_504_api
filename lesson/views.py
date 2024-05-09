@@ -1,10 +1,16 @@
+import random
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAcceptable
 from drf_spectacular.utils import extend_schema
-from my_user.models import UserStudyWordModel, UserStudySessionModel
+from my_user.models import (
+    UserStudyWordModel,
+    UserStudySessionModel,
+    UserEnrollCourseModel,
+)
 from my_user.serializers import (
     UserStudyWordPostSerializer,
 )
@@ -21,6 +27,23 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = CourseModel.objects.all()
     serializer_class = CourseSerializer
 
+    def get_queryset(self):
+        query = super().get_queryset()
+        enroll = self.request.query_params.get("enroll")
+        if enroll:
+            user = self.request.user
+            enrolled_course = UserEnrollCourseModel.objects.filter(user=user).values(
+                "course"
+            )
+            print(enrolled_course)
+            courses_ids = []
+            for c in enrolled_course:
+                print(type(c), c)
+                courses_ids.append(c["course"])
+            query = query.filter(pk__in=courses_ids)
+            # return query
+        return query
+
     @extend_schema(
         description="Get all units in a course",
         responses={200: UnitSerializer(many=True)},
@@ -30,6 +53,18 @@ class CourseViewSet(viewsets.ModelViewSet):
         course = self.get_object()
         units = UnitModel.objects.filter(course=course)
         serializer = UnitSerializer(units, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["POST"])
+    def enroll(self, request, pk, *args, **kwargs):
+        course = self.get_object()
+        user = request.user
+        user_enroll_course_model, created = UserEnrollCourseModel.objects.get_or_create(
+            user=user, course=course
+        )
+        serializer = self.get_serializer(course)
+        if created:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -48,14 +83,16 @@ class UnitViewSet(viewsets.ModelViewSet):
         serializer = WordSerializer(words, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     @action(
         detail=True,
-        methods=["GET", "POST"],
+        methods=["POST"],
     )
     def finish(self, request, pk, *args, **kwargs):
         print("pk", pk)
         return Response("ok", status=status.HTTP_200_OK)
 
+    @transaction.atomic
     @extend_schema(
         description="learn a word of the unit",
         responses={200: LearningReadSerializer()},
@@ -68,9 +105,6 @@ class UnitViewSet(viewsets.ModelViewSet):
         methods=["GET", "POST"],
     )
     def start_learning(self, request, pk, learn_id, *args, **kwargs):
-        test = request.query_params.get("test", False)
-        test = bool(test)
-
         user = request.user
         learn_id = int(learn_id)
         unit = self.get_object()
@@ -78,17 +112,45 @@ class UnitViewSet(viewsets.ModelViewSet):
         user_study_session, user_study_session_created = (
             UserStudySessionModel.objects.get_or_create(user=user)
         )
+        # Todo limit the number of word in intro a user can read
         if request.method == "GET":
-            all_course_units = UnitModel.objects.filter(course=unit.course)
+            # TODO use the user studied words instead
+            all_units = UnitModel.objects.filter(
+                course=unit.course, order__lte=unit.order
+            )
+            words_in_unit = WordModel.objects.filter(unit__in=all_units)
 
-            words = list(WordModel.objects.filter(unit=unit)[0:4])
-            # words = WordModel.objects.filter(unit=unit).order_by("?")[0:4]
-            correct_word = words[0]
-            user_study_session.words.add(correct_word)
+            user_studied_words = UserStudyWordModel.objects.filter(
+                user=user, word__in=words_in_unit
+            ).order_by("?")
+            studied_words = [word.word for word in user_studied_words]
+
+            word_count_limit = 3
+            if len(studied_words) >= word_count_limit:
+                words = studied_words[:word_count_limit]
+            else:
+                words = list(WordModel.objects.filter(unit=unit)[:word_count_limit])
+
+            user_study_word_intro_words = user_studied_words.filter(
+                study_type=UserStudyWordModel.INTRO
+            )
+            if user_study_word_intro_words.exists():
+                correct_word = user_study_word_intro_words.first().word
+            else:
+                correct_word = (
+                    WordModel.objects.filter(unit=unit)
+                    .exclude(pk__in=[w.pk for w in studied_words])
+                    .order_by("-created_at")
+                    .first()
+                )
+
+            words.append(correct_word)
+            random.shuffle(words)
 
             user_word_study, user_word_study_created = (
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
             )
+            user_study_session.words.add(correct_word)
 
             data = {
                 "question": "",
@@ -117,6 +179,7 @@ class UnitViewSet(viewsets.ModelViewSet):
             )
             learning_read_serializer.is_valid(raise_exception=True)
             return Response(learning_read_serializer.data, status=status.HTTP_200_OK)
+
         elif request.method == "POST":
             serializer = UserStudyWordPostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)

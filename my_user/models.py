@@ -4,6 +4,29 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 
+class UserEnrollCourseModel(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE
+    )
+    course = models.ForeignKey(
+        "lesson.CourseModel", verbose_name=_("course"), on_delete=models.CASCADE
+    )
+
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("UserEnrollCourseModel")
+        verbose_name_plural = _("UserEnrollCourseModels")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.pk} user: {self.user} course: {self.course}"
+
+    def get_absolute_url(self):
+        return reverse("UserEnrollCourseModel_detail", kwargs={"pk": self.pk})
+
+
 class UserStudyWordModel(models.Model):
     INTRO = "intro"
     CARD = "card"
@@ -99,7 +122,7 @@ class UserStudyWordModel(models.Model):
 
 
 class UserStudySessionModel(models.Model):
-    max_correct = models.PositiveIntegerField(_("max correct"), default=15)
+    max_correct = models.PositiveIntegerField(_("max correct"), default=10)
     max_session = models.PositiveIntegerField(_("max session"), default=30)
     correct = models.PositiveIntegerField(_("correct"), default=0)
     incorrect = models.PositiveIntegerField(_("incorrect"), default=0)

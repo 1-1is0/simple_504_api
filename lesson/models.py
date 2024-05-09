@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 class CourseModel(models.Model):
     name = models.CharField(_("course name"), max_length=128)
 
+    image = models.ImageField(_("image"), upload_to="course_images/", blank=True)
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 

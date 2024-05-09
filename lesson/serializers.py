@@ -2,22 +2,37 @@ from collections import OrderedDict
 from rest_framework.reverse import reverse
 from rest_framework import serializers
 from lesson.models import CourseModel, UnitModel, WordModel
-from my_user.models import UserStudyWordModel, UserStudySessionModel
+from my_user.models import (
+    UserStudyWordModel,
+    UserStudySessionModel,
+    UserEnrollCourseModel,
+)
 from my_user.serializers import UserStudySessionSerializer
 from api.config import Config
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    units_count = serializers.SerializerMethodField()
-    words_count = serializers.SerializerMethodField()
+    # units_count = serializers.SerializerMethodField()
+    # words_count = serializers.SerializerMethodField()
+    enrolled = serializers.SerializerMethodField()
 
     def get_units_count(self, obj: CourseModel):
+        print("objs", obj)
         count = UnitModel.objects.filter(course=obj).count()
         return count
 
     def get_words_count(self, obj: CourseModel):
         count = WordModel.objects.filter(unit__course=obj).count()
         return count
+
+    def get_enrolled(self, obj: CourseModel):
+        user = self.context.get("request").user
+        if user.is_authenticated:
+            enroll = UserEnrollCourseModel.objects.filter(
+                user=user, course=obj
+            ).exists()
+            return enroll
+        return False
 
     class Meta:
         model = CourseModel
