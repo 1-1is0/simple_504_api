@@ -14,20 +14,22 @@ class UserStudyManager:
         user_studied_words = UserStudyWordModel.objects.filter(
             user=user, word__in=words_in_unit
         )
-        studied_words = [word.word for word in user_studied_words]
 
+        correct_word = UserStudyManager.get_card(user, unit)
+        if correct_word is None:
+            correct_word = UserStudyManager.get_intro(user, unit)
+            print("plan intro")
+        else:
+            print("plan card")
+
+        # studied_words = [word.word for word in user_studied_words]
+        studied_words.append(correct_word)
         word_count_limit = 3
         if len(studied_words) >= word_count_limit:
             words = studied_words[:word_count_limit]
         else:
             words = list(WordModel.objects.filter(unit=unit)[:word_count_limit])
 
-        correct_word = UserStudyManager.get_intro(user, unit)
-        if correct_word is None:
-            correct_word = UserStudyManager.get_card(user, unit)
-            print("plan card")
-        else:
-            print("plan intro")
         words.append(correct_word)
         random.shuffle(words)
 
@@ -77,7 +79,10 @@ class UserStudyManager:
                 .order_by("?")
                 .first()
             )
-            return correct_word.word
+            if correct_word:
+                return correct_word.word
+            else:
+                return None
 
     @staticmethod
     def get_listening(user, unit):
