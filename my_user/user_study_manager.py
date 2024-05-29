@@ -22,7 +22,7 @@ class UserStudyManager:
         else:
             print("plan card")
 
-        # studied_words = [word.word for word in user_studied_words]
+        studied_words = [word.word for word in user_studied_words]
         studied_words.append(correct_word)
         word_count_limit = 3
         if len(studied_words) >= word_count_limit:
