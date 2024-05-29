@@ -1,3 +1,4 @@
+import random
 from my_user.models import UserStudyWordModel, UserStudySessionModel
 from lesson.models import CourseModel, UnitModel, WordModel
 
@@ -12,7 +13,7 @@ class UserStudyManager:
 
         user_studied_words = UserStudyWordModel.objects.filter(
             user=user, word__in=words_in_unit
-        ).order_by("?")
+        )
         studied_words = [word.word for word in user_studied_words]
 
         word_count_limit = 3
@@ -21,43 +22,17 @@ class UserStudyManager:
         else:
             words = list(WordModel.objects.filter(unit=unit)[:word_count_limit])
 
-        # get intro card
-        user_study_word_intro_words = user_studied_words.filter(
-            study_type=UserStudyWordModel.INTRO
-        )
         correct_word = UserStudyManager.get_intro(user, unit)
         if correct_word is None:
             correct_word = UserStudyManager.get_card(user, unit)
+            print("plan card")
+        else:
+            print("plan intro")
         words.append(correct_word)
         random.shuffle(words)
 
+        # TODO do next step
         return words, correct_word
-
-        user_word_study, user_word_study_created = (
-            UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
-        )
-        user_study_session.words.add(correct_word)
-
-        user_studied_words = UserStudyWordModel.objects.filter(user=user)
-        user_study_session = UserStudySessionModel.objects.get_or_create(user=user)
-
-        intro_words = user_studied_words.filter(study_type=UserStudyWordModel.INTRO)
-        card_words = user_studied_words.filter(study_type=UserStudyWordModel.CARD)
-        listening_words = user_studied_words.filter(
-            study_type=UserStudyWordModel.LISTENING
-        )
-        writing_words = user_studied_words.filter(study_type=UserStudyWordModel.WRITING)
-        if intro_words.count() >= UserStudyWordModel.MAX_INTRO:
-            if card_words.count() >= UserStudyWordModel.MAX_CARD:
-                if listening_words.count() >= UserStudyWordModel.MAX_LISTENING:
-                    if writing_words.count() >= UserStudyWor.dModel.MAX_WRITING:
-                        user_study_session.next_step()
-                    else:
-                        writing_words.first().next_step()
-                else:
-                    listening_words.first().next_step()
-            else:
-                card_words.first().next_step()
 
     @staticmethod
     def get_intro(user, unit):
@@ -66,8 +41,9 @@ class UserStudyManager:
         # only 3 intros are allowed
         user_studied_words = UserStudyWordModel.objects.filter(
             user=user, word__in=words_in_unit
-        ).order_by("?")
+        )
         studied_words = [word.word for word in user_studied_words]
+        user_session = UserStudySessionModel.objects.get_or_create(user=user)
 
         intro_words = user_studied_words.filter(study_type=UserStudyWordModel.INTRO)
         if intro_words.count() > UserStudyWordModel.MAX_INTRO:
@@ -90,18 +66,18 @@ class UserStudyManager:
         # only 3 intros are allowed
         user_studied_words = UserStudyWordModel.objects.filter(
             user=user, word__in=words_in_unit
-        ).order_by("?")
+        )
         studied_words = [word.word for word in user_studied_words]
         cards = user_studied_words.filter(study_type=UserStudyWordModel.CARD)
         if cards.count() > UserStudyWordModel.MAX_CARD:
-            return cards.order_by("?").first()
+            return cards.first().word
         else:
             correct_word = (
                 user_studied_words.filter(study_type=UserStudyWordModel.INTRO)
                 .order_by("?")
                 .first()
             )
-            return correct_word
+            return correct_word.word
 
     @staticmethod
     def get_listening(user, unit):

@@ -121,45 +121,12 @@ class UnitViewSet(viewsets.ModelViewSet):
         )
         # Todo limit the number of word in intro a user can read
         if request.method == "GET":
-            # TODO use the user studied words instead
-            all_units = UnitModel.objects.filter(
-                course=unit.course, order__lte=unit.order
-            )
-            words_in_unit = WordModel.objects.filter(unit__in=all_units)
-
-            user_studied_words = UserStudyWordModel.objects.filter(
-                user=user, word__in=words_in_unit
-            ).order_by("?")
-            studied_words = [word.word for word in user_studied_words]
-
-            word_count_limit = 3
-            if len(studied_words) >= word_count_limit:
-                words = studied_words[:word_count_limit]
-            else:
-                words = list(WordModel.objects.filter(unit=unit)[:word_count_limit])
-
-            user_study_word_intro_words = user_studied_words.filter(
-                study_type=UserStudyWordModel.INTRO
-            )
-            if user_study_word_intro_words.exists():
-                correct_word = user_study_word_intro_words.first().word
-            else:
-                correct_word = (
-                    WordModel.objects.filter(unit=unit)
-                    .exclude(pk__in=[w.pk for w in studied_words])
-                    .order_by("-created_at")
-                    .first()
-                )
-
-            words.append(correct_word)
-            random.shuffle(words)
+            words, correct_word = UserStudyManager.plan(user, unit)
+            user_study_session.words.add(correct_word)
 
             user_word_study, user_word_study_created = (
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
             )
-
-            words, correct_word = UserStudyManager.plan(user, unit)
-            user_study_session.words.add(correct_word)
 
             data = {
                 "question": "",
@@ -192,7 +159,8 @@ class UnitViewSet(viewsets.ModelViewSet):
         elif request.method == "POST":
             serializer = UserStudyWordPostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            word = get_object_or_404(WordModel, pk=serializer.validated_data["id"])
+            print("pk", serializer.validated_data["id"])
+            word = get_object_or_404(WordModel, pk=int(serializer.validated_data["id"]))
             headers = self.get_success_headers(serializer.data)
             user_study_session = get_object_or_404(
                 UserStudySessionModel, user=user, learn_id=learn_id
