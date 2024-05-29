@@ -33,7 +33,7 @@ class UserStudyWordModel(models.Model):
     LISTENING = "listening"
     WRITING = "writing"
 
-    MAX_INTRO = 1
+    MAX_INTRO = 3
     MAX_CARD = 5
     MAX_LISTENING = 2
     MAX_WRITING = 2

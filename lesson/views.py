@@ -130,6 +130,7 @@ class UnitViewSet(viewsets.ModelViewSet):
 
             words, correct_word = UserStudyManager.plan(user, unit)
             user_study_session.words.add(correct_word)
+            user_study_session.save()
 
             user_word_study, user_word_study_created = (
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
