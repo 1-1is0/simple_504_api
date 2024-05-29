@@ -129,8 +129,11 @@ class UserStudySessionModel(models.Model):
     current = models.PositiveIntegerField(_("current"), default=0)
     learn_id = models.PositiveIntegerField(_("learn id"), default=1)
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_("user"), on_delete=models.CASCADE
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("user"),
+        on_delete=models.CASCADE,
+        unique=True,
     )
     words = models.ManyToManyField(
         "lesson.WordModel", verbose_name=_("words studied in the session")

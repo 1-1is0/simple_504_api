@@ -4,7 +4,7 @@ from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAcceptable
+from rest_framework.exceptions import NotAcceptable, ValidationError, NotFound
 from drf_spectacular.utils import extend_schema
 from my_user.models import (
     UserStudyWordModel,
@@ -14,6 +14,7 @@ from my_user.models import (
 from my_user.serializers import (
     UserStudyWordPostSerializer,
 )
+from my_user.user_study_manager import UserStudyManager
 from lesson.models import CourseModel, UnitModel, WordModel
 from lesson.serializers import (
     CourseSerializer,
@@ -89,8 +90,14 @@ class UnitViewSet(viewsets.ModelViewSet):
         methods=["POST"],
     )
     def finish(self, request, pk, *args, **kwargs):
-        print("pk", pk)
-        return Response("ok", status=status.HTTP_200_OK)
+        user = request.user
+        user_study_session = UserStudySessionModel.objects.filter(user=user)
+        if user_study_session and user_study_session.exists():
+            serializer = UserStudySessionModel(instance=user_study_session)
+            user_study_session.delete()
+            return (Response(serializer.data, status=status.HTTP_200_OK),)
+        else:
+            raise NotFound("No study session found for user")
 
     @transaction.atomic
     @extend_schema(
@@ -150,6 +157,8 @@ class UnitViewSet(viewsets.ModelViewSet):
             user_word_study, user_word_study_created = (
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
             )
+
+            words, correct_word = UserStudyManager.plan(user, unit)
             user_study_session.words.add(correct_word)
 
             data = {
