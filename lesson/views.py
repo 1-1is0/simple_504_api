@@ -95,6 +95,7 @@ class UnitViewSet(viewsets.ModelViewSet):
         if user_study_session and user_study_session.exists():
             serializer = UserStudySessionModel(instance=user_study_session)
             user_study_session.delete()
+            user_study_session.save()
             return (Response(serializer.data, status=status.HTTP_200_OK),)
         else:
             raise NotFound("No study session found for user")
@@ -121,12 +122,20 @@ class UnitViewSet(viewsets.ModelViewSet):
         )
         # Todo limit the number of word in intro a user can read
         if request.method == "GET":
+
+            if learn_id != user_study_session.learn_id:
+                print("deleting fucking session")
+                user_study_session.delete()
+                user_study_session.save()
+
             words, correct_word = UserStudyManager.plan(user, unit)
             user_study_session.words.add(correct_word)
 
             user_word_study, user_word_study_created = (
                 UserStudyWordModel.objects.get_or_create(user=user, word=correct_word)
             )
+
+            user_study_session = get_object_or_404(UserStudySessionModel, user=user)
 
             data = {
                 "question": "",
@@ -169,6 +178,8 @@ class UnitViewSet(viewsets.ModelViewSet):
                 UserStudyWordModel.objects.get_or_create(user=user, word=word)
             )
             last_word = user_study_session.words.last()
+            if learn_id != user_study_session.learn_id:
+                raise ValidationError("Invalid learn id")
             user_study_session.learn_id += 1
             if last_word == word:
                 user_word_study.next_step()
